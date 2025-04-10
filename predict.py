@@ -3,22 +3,25 @@ import mediapipe as mp
 import tensorflow as tf
 import numpy as np
 
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-mp_hands = mp.solutions.hands
-
-N_FRAMES = 20
+N_FRAMES = 15
+THRESHOLD = 70
 label = {
   0 : "left_swipe",
   1 : "right_swipe"
 }
+INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
-def collectCoords(multi_hand_landmarks, w, h):
+mp_drawing = mp.solutions.drawing_utils
+mp_drawing_styles = mp.solutions.drawing_styles
+mp_hands = mp.solutions.hands
+
+def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
     data = []
     for hand_landmarks in multi_hand_landmarks:
       for index, landmark in enumerate(hand_landmarks.landmark):
-        nx, ny = int(landmark.x * w), int(landmark.y * h)
-        data.extend([nx,ny])
+        if index in index_landmarks:
+          nx, ny = int(landmark.x * w), int(landmark.y * h)
+          data.extend([nx,ny])
     return data
 
 
@@ -30,6 +33,8 @@ with mp_hands.Hands(
   movement = {
     "frames" : []
   }
+  percentages = []
+  text = "Not Recognized"
   while cap.isOpened():
     success, image = cap.read()
     
@@ -54,31 +59,53 @@ with mp_hands.Hands(
 
     # load model 
     model = tf.keras.models.load_model('my_model.keras')
-    # model.summary()
 
     # collect all frames
     if len(movement["frames"]) <= N_FRAMES:
       if results.multi_hand_landmarks:
         coords = collectCoords(results.multi_hand_landmarks,w,h)
         movement["frames"].append(coords)
-        print(len( movement["frames"]))
+        print(len(movement["frames"]))
         
     # classify movement 
     if len(movement["frames"]) == N_FRAMES:
+      # TODO: fix the different length with padding or trimming 
       if all(map(lambda x: len(x) == 42, movement["frames"])) : 
         x = np.array(movement["frames"])
         x = np.reshape(x, (1, N_FRAMES, 42))
         pred = model.predict(x)
-        pred_labels = np.argmax(pred,axis=1)
-        print(pred_labels)
+        # show percentage 
+        for indx, percent in enumerate(pred[0]):
+          value = percent*100
+          print(f"Class {indx + 1}: {value:.2f}%")
+          percentages.append(value)
         movement["frames"] = []
       else:
         print("Data is corrupted!") 
         movement["frames"] = []
 
     # show label 
-    
-    cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+    if percentages:
+      h = max(percentages)
+      index = percentages.index(h)
+      if h >= THRESHOLD:
+          text = f"Label = {index} ({h:.2f}%)"
+      else:
+          text = "Not Recognized"
+      percentages.clear()
+
+    cv2.putText(
+        image,
+        text,             
+        (50, 50),                     
+        cv2.FONT_HERSHEY_SIMPLEX,   
+        1,                            
+        (0, 255, 0),                  
+        2,                            
+        cv2.LINE_AA                 
+      )
+  
+    cv2.imshow('MediaPipe Hands',image)
     if cv2.waitKey(5) & 0xFF == 27:
       break
   cap.release()
