@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import tensorflow as tf
 import numpy as np
+from collections import deque
 
 N_FRAMES = 15
 THRESHOLD = 70
@@ -24,6 +25,14 @@ def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
           data.extend([nx,ny])
     return data
 
+def initMovement():
+  init_frames = []
+  for _ in range(N_FRAMES):
+      frame = []
+      for _ in range(len(INDEX)*2):
+        frame.append(0)
+      init_frames.append(frame)  
+  return init_frames
 
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
@@ -35,6 +44,10 @@ with mp_hands.Hands(
   }
   percentages = []
   text = "Not Recognized"
+  frames = deque(maxlen=N_FRAMES)
+  init = initMovement()
+  frames.extend(init)
+  length = 0
   while cap.isOpened():
     success, image = cap.read()
     
@@ -61,28 +74,28 @@ with mp_hands.Hands(
     model = tf.keras.models.load_model('my_model.keras')
 
     # collect all frames
-    if len(movement["frames"]) <= N_FRAMES:
-      if results.multi_hand_landmarks:
-        coords = collectCoords(results.multi_hand_landmarks,w,h)
-        movement["frames"].append(coords)
-        print(len(movement["frames"]))
+    # if len(movement["frames"]) <= N_FRAMES:
+    if results.multi_hand_landmarks:
+      coords = collectCoords(results.multi_hand_landmarks,w,h)
+      if len(coords) == len(INDEX)*2:
+        frames.append(coords)
+        print(len(frames))
+      length += 1
         
     # classify movement 
-    if len(movement["frames"]) == N_FRAMES:
+    # if len(movement["frames"]) == N_FRAMES:
       # TODO: fix the different length with padding or trimming 
-      if all(map(lambda x: len(x) == 42, movement["frames"])) : 
-        x = np.array(movement["frames"])
-        x = np.reshape(x, (1, N_FRAMES, 42))
-        pred = model.predict(x)
-        # show percentage 
-        for indx, percent in enumerate(pred[0]):
-          value = percent*100
-          print(f"Class {indx + 1}: {value:.2f}%")
-          percentages.append(value)
-        movement["frames"] = []
-      else:
-        print("Data is corrupted!") 
-        movement["frames"] = []
+    if all(map(lambda x: len(x) == 42, frames)) and length == 8:
+      movement["frames"] = frames 
+      x = np.array(movement["frames"])
+      x = np.reshape(x, (1, N_FRAMES, 42))
+      pred = model.predict(x)
+      length = 0
+      # show percentage 
+      for indx, percent in enumerate(pred[0]):
+        value = percent*100
+        print(f"Class {indx + 1}: {value:.2f}%")
+        percentages.append(value)
 
     # show label 
     if percentages:
