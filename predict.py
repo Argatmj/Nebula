@@ -24,6 +24,8 @@ def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
           data.extend([nx,ny])
     return data
 
+# load model 
+model = tf.keras.models.load_model('my_model.keras')
 
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
@@ -57,20 +59,23 @@ with mp_hands.Hands(
       for hand_landmarks in results.multi_hand_landmarks:
         mp_drawing.draw_landmarks(image,hand_landmarks)
 
-    # load model 
-    model = tf.keras.models.load_model('my_model.keras')
-
     # collect all frames
-    if len(movement["frames"]) <= N_FRAMES:
-      if results.multi_hand_landmarks:
-        coords = collectCoords(results.multi_hand_landmarks,w,h)
-        movement["frames"].append(coords)
-        print(len(movement["frames"]))
+    if len(movement["frames"]) < N_FRAMES and results.multi_hand_landmarks:
+      coords = collectCoords(results.multi_hand_landmarks,w,h)
+      movement["frames"].append(coords)
+      # print(len(movement["frames"]))
+    elif len(movement["frames"]) < N_FRAMES // 2:
+      movement["frames"].clear()
         
     # classify movement 
     if len(movement["frames"]) == N_FRAMES:
-      # TODO: fix the different length with padding or trimming 
-      if all(map(lambda x: len(x) == 42, movement["frames"])) : 
+      # if data is not uniformed, slice
+      if not all(map(lambda x: len(x) == 42, movement["frames"])) : 
+        fixed_movement = []
+        for frame in movement["frames"]:
+          fixed_movement.append(frame[:len(INDEX)*2])
+        movement["frames"] = fixed_movement
+      else:
         x = np.array(movement["frames"])
         x = np.reshape(x, (1, N_FRAMES, 42))
         pred = model.predict(x)
@@ -80,10 +85,7 @@ with mp_hands.Hands(
           print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
         movement["frames"] = []
-      else:
-        print("Data is corrupted!") 
-        movement["frames"] = []
-
+  
     # show label 
     if percentages:
       h = max(percentages)

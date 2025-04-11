@@ -4,19 +4,21 @@ import time
 import mediapipe as mp
 import keyboard as key
 
-N_FRAMES = 2
-FILE_PATH = "data.json"
+N_FRAMES = 15
+FILE_PATH = "exp.json"
+INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-def collectMovement(multi_hand_landmarks, w, h):
+def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
     data = []
     for hand_landmarks in multi_hand_landmarks:
       for index, landmark in enumerate(hand_landmarks.landmark):
-        nx, ny = int(landmark.x * w), int(landmark.y * h)
-        data.extend([nx,ny])
+        if index in index_landmarks:
+          nx, ny = int(landmark.x * w), int(landmark.y * h)
+          data.extend([nx,ny])
     return data
 
 cap = cv2.VideoCapture(0)
@@ -57,6 +59,7 @@ with mp_hands.Hands(
       current_label = id
       print(f"Label is set to {current_label}!")
 
+    # TODO: could be refined 
     if key.is_pressed('1'):
       set_label(1)
     
@@ -80,10 +83,10 @@ with mp_hands.Hands(
       }
 
     # collect frames
-    if recording and (len(movement["frames"])) <= N_FRAMES:
+    if recording and (len(movement["frames"])) < N_FRAMES:
       if results.multi_hand_landmarks:
-        gesture_data = collectMovement(results.multi_hand_landmarks, w, h)
-        if len(gesture_data) == 42:
+        gesture_data = collectCoords(results.multi_hand_landmarks, w, h)
+        if len(gesture_data) == len(INDEX)*2:
           movement["frames"].append(gesture_data)
           print(f"Collected frame {len(movement['frames'])}")
         else:
