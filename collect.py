@@ -30,7 +30,8 @@ with mp_hands.Hands(
   recording = False
   delete_last_row = False
   frames = []
-  data = []
+  data = [] 
+  label_flag = False
   while cap.isOpened():
     success, image = cap.read()
     
@@ -59,19 +60,11 @@ with mp_hands.Hands(
       current_label = id
       print(f"Label is set to {current_label}!")
 
-    # TODO: could be refined 
-    if key.is_pressed('1'):
-      set_label(1)
-    
-    if key.is_pressed('2'):
-      set_label(2)
-
-    if key.is_pressed('3'):
-      set_label(3)
-
-    if key.is_pressed('4'):
-      set_label(4)
-
+    # listen for label keys
+    for i in range(1,10):
+      if key.is_pressed(str(i)):
+        set_label(i)
+       
     # start recording
     if key.is_pressed('r') and not recording:
       print("Recording started...")
