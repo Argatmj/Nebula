@@ -1,26 +1,65 @@
 import cv2
 import json
 import time 
+import math
 import mediapipe as mp
 import keyboard as key
+import copy 
 
 N_FRAMES = 15
-FILE_PATH = "exp.json"
+FILE_PATH = "data.json"
 INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+
+#INDEX = [0,4,8,12,16,20]
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
+#TODO: Moving average
+
+def normalize_data(anchor,coords,size):  
+  new_x = (coords[0] - anchor[0]) / size
+  new_y = (coords[1] - anchor[1]) / size
+  return [new_x,new_y]
+
+def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
     data = []
     for hand_landmarks in multi_hand_landmarks:
+      hand = hand_landmarks.landmark
+      wrist = hand[0]
+      highest_point = hand[12]
+      anchor = [wrist.x,wrist.y]
+      size = math.sqrt((highest_point.x - wrist.x)**2 + (highest_point.y - wrist.y)**2)
       for index, landmark in enumerate(hand_landmarks.landmark):
         if index in index_landmarks:
-          nx, ny = int(landmark.x * w), int(landmark.y * h)
-          data.extend([nx,ny])
+          coords = [landmark.x,landmark.y]
+          data.extend(normalize_data(anchor,coords,size))
     return data
 
+def print_label_count(data):
+  label_dict = {}
+  for movements in data:
+      label = movements["label"]
+      if label in label_dict:
+        label_dict[label] += 1
+      else:
+        label_dict[label] = 1
+  if label_dict:
+    for key, value in label_dict.items():
+      print(f"Label {key}: {value}.")
+  else:
+     print("data is empty")
+
+def read_file():
+  with open(FILE_PATH,"r") as f:
+    data = json.load(f)
+  return data
+
+def write_file(data):
+  with open(FILE_PATH,"w") as f:
+        json.dump(data,f)
+    
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
     model_complexity=0,
@@ -30,13 +69,10 @@ with mp_hands.Hands(
   recording = False
   delete_last_row = False
   frames = []
-  data = [] 
+  data = []
   label_flag = False
   while cap.isOpened():
     success, image = cap.read()
-    
-    # get height and width from image
-    h, w, _ = image.shape
 
     if not success:
       print("Ignoring empty camera frame.")
@@ -78,35 +114,32 @@ with mp_hands.Hands(
     # collect frames
     if recording and (len(movement["frames"])) < N_FRAMES:
       if results.multi_hand_landmarks:
-        gesture_data = collectCoords(results.multi_hand_landmarks, w, h)
+        gesture_data = collectCoords(results.multi_hand_landmarks)
         if len(gesture_data) == len(INDEX)*2:
           movement["frames"].append(gesture_data)
           print(f"Collected frame {len(movement['frames'])}")
         else:
           print(f"Record again. data was corrupted!")
-        #time.sleep(0.1)
   
     # add data to collections 
     if recording and (len(movement["frames"])) == N_FRAMES:
       movement["label"] = current_label
+      # movement["frames"] = average(movement["frames"])
+      data = read_file()
       data.append(movement)
-      with open(FILE_PATH, "w", newline= '') as f:
-        json.dump(data,f)
-        print("Data saved!")
-        print(f"Number of moves : {len(data)}")
+      write_file(data)
+      print("Data saved!")
       recording = False
-      time.sleep(0.2)
+      print_label_count(read_file())
+      # time.sleep(0.2)
 
      # remove last data from collections
     if key.is_pressed('d') and not delete_last_row:
       delete_last_row = True
-      with open(FILE_PATH,"r") as f:
-        collected_movements = json.load(f)
-        new_movements = collected_movements[:-1]
-        data = new_movements
-      with open(FILE_PATH,"w") as f:
-        json.dump(new_movements,f)
+      new_movements = read_file()[:-1]
+      write_file(new_movements)
       print("Last row removed!")
+      print_label_count(read_file())
 
     if key.is_pressed('d') and delete_last_row:
       delete_last_row = False

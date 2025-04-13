@@ -2,26 +2,41 @@ import cv2
 import mediapipe as mp
 import tensorflow as tf
 import numpy as np
+import math 
+import time
 
 N_FRAMES = 15
-THRESHOLD = 70
+THRESHOLD = 90
 label = {
   0 : "left_swipe",
-  1 : "right_swipe"
+  1 : "right_swipe",
+  2 : "still"
 }
 INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+
+#INDEX = [0,4,8,12,16,20]
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-def collectCoords(multi_hand_landmarks, w, h, index_landmarks=INDEX):
+def normalize_data(anchor,coords,size):  
+  new_x = (coords[0] - anchor[0]) / size
+  new_y = (coords[1] - anchor[1]) / size
+  return [new_x,new_y]
+
+def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
     data = []
     for hand_landmarks in multi_hand_landmarks:
+      hand = hand_landmarks.landmark
+      wrist = hand[0]
+      highest_point = hand[12]
+      anchor = [wrist.x,wrist.y]
+      size = math.sqrt((highest_point.x - wrist.x)**2 + (highest_point.y - wrist.y)**2)
       for index, landmark in enumerate(hand_landmarks.landmark):
         if index in index_landmarks:
-          nx, ny = int(landmark.x * w), int(landmark.y * h)
-          data.extend([nx,ny])
+          coords = [landmark.x,landmark.y]
+          data.extend(normalize_data(anchor,coords,size))
     return data
 
 # load model 
@@ -39,9 +54,6 @@ with mp_hands.Hands(
   text = "Not Recognized"
   while cap.isOpened():
     success, image = cap.read()
-    
-    # get height and width from image
-    h, w, _ = image.shape
 
     if not success:
       print("Ignoring empty camera frame.")
@@ -61,23 +73,26 @@ with mp_hands.Hands(
 
     # collect all frames
     if len(movement["frames"]) < N_FRAMES and results.multi_hand_landmarks:
-      coords = collectCoords(results.multi_hand_landmarks,w,h)
+      coords = collectCoords(results.multi_hand_landmarks)
       movement["frames"].append(coords)
       # print(len(movement["frames"]))
-    elif len(movement["frames"]) < N_FRAMES // 2:
+    else:
       movement["frames"].clear()
+    # elif len(movement["frames"]) < N_FRAMES // 2:
+    #   movement["frames"].clear()
         
     # classify movement 
     if len(movement["frames"]) == N_FRAMES:
       # if data is not uniformed, slice
-      if not all(map(lambda x: len(x) == 42, movement["frames"])) : 
+      if not all(map(lambda x: len(x) == len(INDEX)*2, movement["frames"])) : 
         fixed_movement = []
         for frame in movement["frames"]:
           fixed_movement.append(frame[:len(INDEX)*2])
         movement["frames"] = fixed_movement
       else:
+        movement["frames"] = average(movement["frames"])
         x = np.array(movement["frames"])
-        x = np.reshape(x, (1, N_FRAMES, 42))
+        x = np.reshape(x, (1, N_FRAMES, len(INDEX)*2))
         pred = model.predict(x)
         # show percentage 
         for indx, percent in enumerate(pred[0]):
@@ -91,7 +106,7 @@ with mp_hands.Hands(
       h = max(percentages)
       index = percentages.index(h)
       if h >= THRESHOLD:
-          text = f"Label = {index} ({h:.2f}%)"
+          text = f"{label[index]}"
       else:
           text = "Not Recognized"
       percentages.clear()
@@ -106,7 +121,7 @@ with mp_hands.Hands(
         2,                            
         cv2.LINE_AA                 
       )
-  
+    
     cv2.imshow('MediaPipe Hands',image)
     if cv2.waitKey(5) & 0xFF == 27:
       break
