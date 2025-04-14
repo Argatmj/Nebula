@@ -90,7 +90,6 @@ with mp_hands.Hands(
           fixed_movement.append(frame[:len(INDEX)*2])
         movement["frames"] = fixed_movement
       else:
-        movement["frames"] = average(movement["frames"])
         x = np.array(movement["frames"])
         x = np.reshape(x, (1, N_FRAMES, len(INDEX)*2))
         pred = model.predict(x)

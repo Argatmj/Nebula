@@ -5,6 +5,7 @@ import math
 import mediapipe as mp
 import keyboard as key
 import copy 
+from functools import reduce
 
 N_FRAMES = 15
 FILE_PATH = "data.json"
@@ -16,26 +17,69 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-#TODO: Moving average
+#TODO: make utils library?
 
-def normalize_data(anchor,coords,size):  
-  new_x = (coords[0] - anchor[0]) / size
-  new_y = (coords[1] - anchor[1]) / size
-  return [new_x,new_y]
+
+def normalize_data(data):
+  for movement in data:
+    for frame in movement["frames"]:
+      anchor_x, anchor_y = frame[0], frame[1]
+      top_x, top_y = frame[24], frame[25]
+      size = math.sqrt((top_x - anchor_x) ** 2 + (top_y - anchor_y) ** 2)
+      for i in range(0, len(frame), 2):
+        x, y = frame[i], frame[i + 1]
+        frame[i] = (x - anchor_x) / size
+        frame[i + 1] = (y - anchor_y) / size
+  return data
+
+def average_data(data, window_size=3):
+  new_data = []
+
+  for movement in data:
+    frames = movement["frames"]
+    num_frames = len(frames)
+    num_coords = len(frames[0])
+
+    # group by index
+    index_coords = [[] for _ in range(num_coords)]
+    for frame in frames:
+      for i in range(num_coords):
+        index_coords[i].append(frame[i])
+
+    # apply moving average
+    avg_index_coords = []
+    for coord_list in index_coords:
+      padded = [coord_list[0]] * (window_size // 2) + coord_list + [coord_list[-1]] * (window_size // 2)
+      avg_group = []
+      for i in range(num_frames):
+        window = padded[i:i + window_size]
+        avg = reduce(lambda acc, x: acc + x, window) / window_size
+        avg_group.append(avg)
+      avg_index_coords.append(avg_group)
+
+    # reconstruct data
+    new_frames = []
+    for i in range(num_frames):
+      frame = []
+      for j in range(num_coords):
+        frame.append(avg_index_coords[j][i])
+      new_frames.append(frame)
+
+    new_data.append({
+      "label": movement["label"],
+      "frames": new_frames
+    })
+
+  return new_data
 
 def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
-    data = []
-    for hand_landmarks in multi_hand_landmarks:
-      hand = hand_landmarks.landmark
-      wrist = hand[0]
-      highest_point = hand[12]
-      anchor = [wrist.x,wrist.y]
-      size = math.sqrt((highest_point.x - wrist.x)**2 + (highest_point.y - wrist.y)**2)
-      for index, landmark in enumerate(hand_landmarks.landmark):
-        if index in index_landmarks:
-          coords = [landmark.x,landmark.y]
-          data.extend(normalize_data(anchor,coords,size))
-    return data
+  data = []
+  for hand_landmarks in multi_hand_landmarks:
+    for index, landmark in enumerate(hand_landmarks.landmark):
+      if index in index_landmarks:
+        coords = [landmark.x,landmark.y]
+        data.extend(coords)
+  return data
 
 def print_label_count(data):
   label_dict = {}
@@ -124,7 +168,6 @@ with mp_hands.Hands(
     # add data to collections 
     if recording and (len(movement["frames"])) == N_FRAMES:
       movement["label"] = current_label
-      # movement["frames"] = average(movement["frames"])
       data = read_file()
       data.append(movement)
       write_file(data)
