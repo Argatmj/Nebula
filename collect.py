@@ -1,7 +1,6 @@
 import cv2
 import json
 import time 
-import math
 import mediapipe as mp
 import keyboard as key
 from functools import reduce
@@ -15,61 +14,6 @@ INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
-
-#TODO: make utils library?
-#TODO: determine num frames, verify model, then refine predict.py
-
-def normalize_data(data):
-  for movement in data:
-    for frame in movement["frames"]:
-      anchor_x, anchor_y = frame[0], frame[1]
-      top_x, top_y = frame[24], frame[25]
-      size = math.sqrt((top_x - anchor_x) ** 2 + (top_y - anchor_y) ** 2)
-      for i in range(0, len(frame), 2):
-        x, y = frame[i], frame[i + 1]
-        frame[i] = (x - anchor_x) / size
-        frame[i + 1] = (y - anchor_y) / size
-  return data
-
-def average_data(data, window_size=3):
-  new_data = []
-
-  for movement in data:
-    frames = movement["frames"]
-    num_frames = len(frames)
-    num_coords = len(frames[0])
-
-    # group by index
-    index_coords = [[] for _ in range(num_coords)]
-    for frame in frames:
-      for i in range(num_coords):
-        index_coords[i].append(frame[i])
-
-    # apply moving average
-    avg_index_coords = []
-    for coord_list in index_coords:
-      padded = [coord_list[0]] * (window_size // 2) + coord_list + [coord_list[-1]] * (window_size // 2)
-      avg_group = []
-      for i in range(num_frames):
-        window = padded[i:i + window_size]
-        avg = reduce(lambda acc, x: acc + x, window) / window_size
-        avg_group.append(avg)
-      avg_index_coords.append(avg_group)
-
-    # reconstruct data
-    new_frames = []
-    for i in range(num_frames):
-      frame = []
-      for j in range(num_coords):
-        frame.append(avg_index_coords[j][i])
-      new_frames.append(frame)
-
-    new_data.append({
-      "label": movement["label"],
-      "frames": new_frames
-    })
-
-  return new_data
 
 def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
   data = []
@@ -185,17 +129,6 @@ with mp_hands.Hands(
 
     if key.is_pressed('d') and delete_last_row:
       delete_last_row = False
-      time.sleep(0.2)
-
-    if key.is_pressed("q") and not process:
-      process = True
-      data = read_file()
-      processed_data = average_data(normalize_data(data))
-      write_file(data,"p_data.json")
-      print("Processed data saved to p_data.json")
-
-    if key.is_pressed('q') and process:
-      process = False
       time.sleep(0.2)
   
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
