@@ -4,7 +4,6 @@ import time
 import math
 import mediapipe as mp
 import keyboard as key
-import copy 
 from functools import reduce
 
 N_FRAMES = 15
@@ -18,7 +17,7 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 #TODO: make utils library?
-
+#TODO: determine num frames, verify model, then refine predict.py
 
 def normalize_data(data):
   for movement in data:
@@ -95,13 +94,13 @@ def print_label_count(data):
   else:
      print("data is empty")
 
-def read_file():
+def read_file(file=FILE_PATH):
   with open(FILE_PATH,"r") as f:
     data = json.load(f)
   return data
 
-def write_file(data):
-  with open(FILE_PATH,"w") as f:
+def write_file(data,file=FILE_PATH):
+  with open(file,"w") as f:
         json.dump(data,f)
     
 cap = cv2.VideoCapture(0)
@@ -112,8 +111,9 @@ with mp_hands.Hands(
   current_label = 1
   recording = False
   delete_last_row = False
+  process = False
   frames = []
-  data = []
+  data = read_file()
   label_flag = False
   while cap.isOpened():
     success, image = cap.read()
@@ -168,7 +168,6 @@ with mp_hands.Hands(
     # add data to collections 
     if recording and (len(movement["frames"])) == N_FRAMES:
       movement["label"] = current_label
-      data = read_file()
       data.append(movement)
       write_file(data)
       print("Data saved!")
@@ -179,13 +178,24 @@ with mp_hands.Hands(
      # remove last data from collections
     if key.is_pressed('d') and not delete_last_row:
       delete_last_row = True
-      new_movements = read_file()[:-1]
-      write_file(new_movements)
+      data = data[:-1]
+      write_file(data)
       print("Last row removed!")
       print_label_count(read_file())
 
     if key.is_pressed('d') and delete_last_row:
       delete_last_row = False
+      time.sleep(0.2)
+
+    if key.is_pressed("q") and not process:
+      process = True
+      data = read_file()
+      processed_data = average_data(normalize_data(data))
+      write_file(data,"p_data.json")
+      print("Processed data saved to p_data.json")
+
+    if key.is_pressed('q') and process:
+      process = False
       time.sleep(0.2)
   
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
