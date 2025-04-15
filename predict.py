@@ -20,23 +20,24 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
-def normalize_data(anchor,coords,size):  
-  new_x = (coords[0] - anchor[0]) / size
-  new_y = (coords[1] - anchor[1]) / size
-  return [new_x,new_y]
+def normalize(sequence):
+  # find center
+  arr = np.array(sequence)
+  arr = arr.reshape(-1,2)
+  center = arr.mean(axis=0)
+  # find scale
+  scale = arr.std(axis=0)
+  # normalize
+  normalized = (arr - center) / scale 
+  return normalized.reshape(N_FRAMES,42)
 
 def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
     data = []
     for hand_landmarks in multi_hand_landmarks:
-      hand = hand_landmarks.landmark
-      wrist = hand[0]
-      highest_point = hand[12]
-      anchor = [wrist.x,wrist.y]
-      size = math.sqrt((highest_point.x - wrist.x)**2 + (highest_point.y - wrist.y)**2)
       for index, landmark in enumerate(hand_landmarks.landmark):
         if index in index_landmarks:
           coords = [landmark.x,landmark.y]
-          data.extend(normalize_data(anchor,coords,size))
+          data.extend(coords)
     return data
 
 # load model 
@@ -47,9 +48,7 @@ with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5) as hands:
-  movement = {
-    "frames" : []
-  }
+  frames = []
   percentages = []
   text = "Not Recognized"
   while cap.isOpened():
@@ -72,33 +71,33 @@ with mp_hands.Hands(
         mp_drawing.draw_landmarks(image,hand_landmarks)
 
     # collect all frames
-    if len(movement["frames"]) < N_FRAMES and results.multi_hand_landmarks:
+    if len(frames) < N_FRAMES and results.multi_hand_landmarks:
       coords = collectCoords(results.multi_hand_landmarks)
-      movement["frames"].append(coords)
-      # print(len(movement["frames"]))
+      frames.append(coords)
+      # print(len(frames))
     else:
-      movement["frames"].clear()
-    # elif len(movement["frames"]) < N_FRAMES // 2:
-    #   movement["frames"].clear()
+      frames.clear()
+    # elif len(frames) < N_FRAMES // 2:
+    #   frames.clear()
         
     # classify movement 
-    if len(movement["frames"]) == N_FRAMES:
+    if len(frames) == N_FRAMES:
       # if data is not uniformed, slice
-      if not all(map(lambda x: len(x) == len(INDEX)*2, movement["frames"])) : 
+      if not all(map(lambda x: len(x) == len(INDEX)*2, frames)) : 
         fixed_movement = []
-        for frame in movement["frames"]:
+        for frame in frames:
           fixed_movement.append(frame[:len(INDEX)*2])
-        movement["frames"] = fixed_movement
+        frames = fixed_movement
       else:
-        x = np.array(movement["frames"])
-        x = np.reshape(x, (1, N_FRAMES, len(INDEX)*2))
+        x = normalize(frames)
+        x = x.reshape(1, N_FRAMES,42)
         pred = model.predict(x)
         # show percentage 
         for indx, percent in enumerate(pred[0]):
           value = percent*100
           print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
-        movement["frames"] = []
+        frames = []
   
     # show label 
     if percentages:
