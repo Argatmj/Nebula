@@ -3,7 +3,6 @@ import mediapipe as mp
 import tensorflow as tf
 import numpy as np
 import math 
-import time
 
 N_FRAMES = 15
 THRESHOLD = 90
@@ -43,6 +42,36 @@ def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
 # load model 
 model = tf.keras.models.load_model('my_model.keras')
 
+def calculate_distance(thumb, index):
+  x, y = index[0] - thumb[0], index[1] - thumb[1]
+  return math.hypot(x,y)
+
+def draw_line(img, hand_landmarks):
+  height, width, _ = img.shape
+  landmarks = hand_landmarks.landmark
+  thumb, index = landmarks[4], landmarks[8]
+  thumb_coords = (int(thumb.x * width), int(thumb.y * height))
+  index_coords = (int(index.x * width), int(index.y * height))
+  thick, colour = 4, (255, 0, 0)
+  cv2.line(img, thumb_coords, index_coords, colour, thick)
+  return thumb_coords, index_coords, width, height
+
+def get_hand_size(hand_landmark, w, h):
+  hand = hand_landmark.landmark
+  bottom, top = hand[0], hand[12]
+  x, y = top.x*w - bottom.x*w, top.y*h - bottom.y*h
+  return math.hypot(x,y)
+
+def change_volume(img, hand_landmarks):
+  thumb, index, w, h = draw_line(img, hand_landmarks)
+  size = get_hand_size(hand_landmarks,w,h)
+  min_d, max_d = 0.2, 1.5
+  dist = calculate_distance(thumb, index) / size 
+  value = (dist - min_d) / (max_d - min_d)
+  value = max(0.0, min(value,1.0))
+  percent = value * 100
+  print(round(percent))
+
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
     model_complexity=0,
@@ -68,17 +97,15 @@ with mp_hands.Hands(
     # draw landmark
     if results.multi_hand_landmarks:
       for hand_landmarks in results.multi_hand_landmarks:
-        mp_drawing.draw_landmarks(image,hand_landmarks)
+        #mp_drawing.draw_landmarks(image,hand_landmarks)
+        change_volume(image,hand_landmarks)
 
     # collect all frames
     if len(frames) < N_FRAMES and results.multi_hand_landmarks:
       coords = collectCoords(results.multi_hand_landmarks)
       frames.append(coords)
-      # print(len(frames))
     else:
       frames.clear()
-    # elif len(frames) < N_FRAMES // 2:
-    #   frames.clear()
         
     # classify movement 
     if len(frames) == N_FRAMES:
@@ -91,11 +118,11 @@ with mp_hands.Hands(
       else:
         x = normalize(frames)
         x = x.reshape(1, N_FRAMES,42)
-        pred = model.predict(x)
+        pred = model.predict(x,verbose=0)
         # show percentage 
         for indx, percent in enumerate(pred[0]):
           value = percent*100
-          print(f"Class {indx + 1}: {value:.2f}%")
+          #print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
         frames = []
   
