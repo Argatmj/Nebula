@@ -6,12 +6,14 @@ import math
 from collections import deque
 
 N_FRAMES = 15
-THRESHOLD = 90
+THRESHOLD = 95
 label = {
   0 : "left_swipe",
   1 : "right_swipe",
   2 : "still",
-  3 : "volume"
+  3 : "volume",
+  4 : "start",
+  5 : "pause" 
 }
 INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 
@@ -137,18 +139,18 @@ with mp_hands.Hands(
         # show percentage 
         for indx, percent in enumerate(pred[0]):
           value = percent*100
-          #print(f"Class {indx + 1}: {value:.2f}%")
+          # print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
         frames = []
   
     # show label 
     if percentages:
       h = max(percentages)
-      index = percentages.index(h)
-      if index == 3:
-        flag = True
       if h >= THRESHOLD:
+          index = percentages.index(h)
           text = f"{label[index]}"
+          if index == 3:
+            flag = True
       else:
           text = "Not Recognized"
       percentages.clear()
