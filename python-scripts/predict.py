@@ -6,18 +6,20 @@ import math
 from collections import deque
 
 N_FRAMES = 15
-THRESHOLD = 95
+THRESHOLD = 90
 label = {
   0 : "left_swipe",
   1 : "right_swipe",
   2 : "still",
-  3 : "volume",
-  4 : "start",
-  5 : "pause" 
+  3 : "start",
+  4 : "volume",
+  5 : "garbo"
 }
-INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+#INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+#leni = 42
 
-#INDEX = [0,4,8,12,16,20]
+INDEX = [0,4,8,12,16,20]
+leni = 12
 
 #TODO: improve volume and still dataset 
 
@@ -34,7 +36,7 @@ def normalize(sequence):
   scale = arr.std(axis=0)
   # normalize
   normalized = (arr - center) / scale 
-  return normalized.reshape(N_FRAMES,42)
+  return normalized.reshape(N_FRAMES,leni)
 
 def collectCoords(multi_hand_landmarks,index_landmarks=INDEX):
     data = []
@@ -134,12 +136,12 @@ with mp_hands.Hands(
         frames = fixed_movement
       else:
         x = normalize(frames)
-        x = x.reshape(1, N_FRAMES,42)
+        x = x.reshape(1, N_FRAMES,leni)
         pred = model.predict(x,verbose=0)
         # show percentage 
         for indx, percent in enumerate(pred[0]):
           value = percent*100
-          # print(f"Class {indx + 1}: {value:.2f}%")
+          print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
         frames = []
   
@@ -149,7 +151,7 @@ with mp_hands.Hands(
       if h >= THRESHOLD:
           index = percentages.index(h)
           text = f"{label[index]}"
-          if index == 3:
+          if index == 4:
             flag = True
       else:
           text = "Not Recognized"
