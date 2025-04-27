@@ -1,6 +1,9 @@
 {
 	"folders": [
 		{
+			"path": "../.."
+		},
+		{
 			"name": "esp32",
 			"path": ".."
 		}

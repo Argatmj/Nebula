@@ -21,8 +21,8 @@ class AudioPC {
         "https://strm112.1.fm/bossanova_mobile_mp3?aw_0_req.gdpr=true"
       };
       
-    const char *wifi = "Rg";
-    const char *password = "12345678";
+    const char *wifi = "";
+    const char *password = "";
 
     URLStream urlStream_;
     AudioSourceURL source_;

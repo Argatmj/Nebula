@@ -1,11 +1,12 @@
-#include "AudioPC.h"
+#include "MQTT.h"
 
-AudioPC audio;
+MQTT mq;
 
 void setup() {
   Serial.begin(115200);
-  audio.setup();
+  mq.setup();
 }
+
 void loop() {
-  audio.play();
+  mq.loop();
 }

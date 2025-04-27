@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import math 
 from collections import deque
+import paho.mqtt.publish as publish
 
 N_FRAMES = 15
 THRESHOLD = 90
@@ -77,9 +78,23 @@ def change_volume(img, hand_landmarks):
   dist = calculate_distance(thumb, index) / size 
   values = (dist - min_d) / (max_d - min_d)
   value = max(0.0, min(values,1.0))
-  percent = value * 100
-  print(round(percent))
-  return percent
+  value = value * 1
+  value = round(value, 1)
+  print(f"Volume : {value}")
+  publish.single("Volume", value)
+  return value
+
+def send_command(index):
+  match index:
+    case 0:
+      publish.single("Position", "Previous")
+    case 1:
+      publish.single("Position", "Next")
+    case 3:
+      publish.single("State", "Switch")
+    case _:
+      # print(f"{index} does not match")
+      pass
 
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
@@ -114,7 +129,7 @@ with mp_hands.Hands(
           percent = change_volume(image,hand_landmarks)
           recent_volumes.append(round(percent))
           std = np.std(recent_volumes)
-          if len(recent_volumes) == 20 and std < 1.5:
+          if len(recent_volumes) == 20 and std < 0.15:
             print(f"Volume saved : {recent_volumes[-1]}")
             flag = False
             recent_volumes.clear()
@@ -141,16 +156,18 @@ with mp_hands.Hands(
         # show percentage 
         for indx, percent in enumerate(pred[0]):
           value = percent*100
-          print(f"Class {indx + 1}: {value:.2f}%")
+          #print(f"Class {indx + 1}: {value:.2f}%")
           percentages.append(value)
         frames = []
   
-    # show label 
+    # show label / send command 
     if percentages:
       h = max(percentages)
       if h >= THRESHOLD:
           index = percentages.index(h)
           text = f"{label[index]}"
+          if index in range(0,4):
+            send_command(index)
           if index == 4:
             flag = True
       else:
