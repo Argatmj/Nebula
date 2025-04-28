@@ -15,7 +15,7 @@ void AudioPC::updateVolume(float newVolume){
 }
 
 void AudioPC::pause(){
-    player_.setActive(player_.isActive());
+    player_.setActive(!player_.isActive());
 }
 
 void AudioPC::setup(){

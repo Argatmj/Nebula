@@ -1,12 +1,12 @@
-#include "MQTT.h"
+#include "Controller.h"
 
-MQTT mq;
+Controller control;
 
 void setup() {
   Serial.begin(115200);
-  mq.setup();
+  control.setup();
 }
 
 void loop() {
-  mq.loop();
+  control.loop();
 }
