@@ -7,7 +7,6 @@ mqClient_(espClient_)
 
 void MQTT::setup()
 {
-    setup_Wifi();
     mqClient_.setServer(mqtt_server_, 1883); 
 }
 
@@ -23,28 +22,6 @@ void MQTT::loop()
 void MQTT::setCallBack(MQTT_CALLBACK_SIGNATURE)
 {
   mqClient_.setCallback(callback);
-}
-
-void MQTT::setup_Wifi()
-{
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid_);
-  
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid_, password_);
-  
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-    }
-  
-    randomSeed(micros());
-  
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
 }
 
 void MQTT::reconnect()

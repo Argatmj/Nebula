@@ -11,5 +11,8 @@ class Controller {
 
     private:
     MQTT mqClient_;
+    void setup_WiFi();
     AudioPC audioClient_;
+    const char* ssid_ = "";
+    const char* password_ = "";
 };

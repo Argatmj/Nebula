@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula's Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2>Add Audio</h2>
+    <form id="audioForm">
+        <label for="audioUrl">URL Audio:</label>
+        <input type="url" id="audioUrl" required placeholder="https://example.com/audio.mp3">
+        <button type="submit">Submit</button>
+    </form>
+
+    <script language="javascript" type="text/javascript">
+        let websocket;
+        const url = "";
+    
+        function onSubmit() {
+            const urlInput = document.getElementById("audioUrl");
+            if (websocket.readyState === WebSocket.OPEN) {
+                websocket.send(urlInput.value);
+            } else {
+                console.log("WebSocket is not connected.");
+            }
+        }
+
+        window.addEventListener("load", () => {
+            document.getElementById("audioForm").addEventListener("submit", onSubmit);
+            websocket = new WebSocket(url);
+        });
+    </script>
+</body>
+
+</html>

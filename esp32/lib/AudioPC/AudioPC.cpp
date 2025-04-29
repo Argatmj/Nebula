@@ -10,6 +10,11 @@ void AudioPC::updatePosition(int pos){
     pos == 1 ? player_.next() : player_.previous();
 }
 
+void AudioPC::addAudio(const char* url)
+{
+    source_.addURL(url);
+}
+
 void AudioPC::updateVolume(float newVolume){
     player_.setVolume(newVolume);
 }

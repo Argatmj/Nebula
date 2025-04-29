@@ -1,12 +1,11 @@
-#include "Controller.h"
+#include "WebServerSocket.h"
 
-Controller control;
+WebServerSocket wss;
 
-void setup() {
-  Serial.begin(115200);
-  control.setup();
+void setup(){
+  wss.setup();
 }
 
-void loop() {
-  control.loop();
+void loop(){
+  wss.loop();
 }
