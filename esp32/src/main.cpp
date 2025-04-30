@@ -1,11 +1,11 @@
-#include "WebServerSocket.h"
+#include "Controller.h"
 
-WebServerSocket wss;
+Controller control;
 
 void setup(){
-  wss.setup();
+  control.setup();
 }
 
 void loop(){
-  wss.loop();
+  control.loop();
 }

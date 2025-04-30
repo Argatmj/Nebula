@@ -1,6 +1,5 @@
 #include <vector>
 #include <string.h>
-#include <WiFi.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 
@@ -14,6 +13,7 @@ class MQTT {
     void setCallBack(MQTT_CALLBACK_SIGNATURE);
     
     private:
+    void setup_WiFi();
     void reconnect();
     WiFiClient espClient_;
     PubSubClient mqClient_;

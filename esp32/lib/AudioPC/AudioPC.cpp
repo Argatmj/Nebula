@@ -21,6 +21,9 @@ void AudioPC::updateVolume(float newVolume){
 
 void AudioPC::pause(){
     player_.setActive(!player_.isActive());
+    String active = player_.isActive() ? "Active" : "Inactive";
+    Serial.print("Current Player Status: ");
+    Serial.println(active);
 }
 
 void AudioPC::setup(){

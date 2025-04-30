@@ -8,12 +8,12 @@ body {
     height: 100vh;
     margin: 0;
 }
-  
+
 h2 {
     color: #333;
     margin-bottom: 20px;
 }
-  
+
 form {
     background: white;
     padding: 20px 30px;
@@ -22,14 +22,15 @@ form {
     display: flex;
     flex-direction: column;
     width: 300px;
+    margin-bottom: 20px;
 }
-  
+
 label {
     margin-bottom: 8px;
     color: #555;
     font-weight: 500;
 }
-  
+
 input[type="url"] {
     padding: 10px;
     border: 1px solid #ccc;
@@ -39,11 +40,11 @@ input[type="url"] {
     outline: none;
     transition: border 0.2s;
 }
-  
+
 input[type="url"]:focus {
     border-color: #007bff;
 }
-  
+
 button {
     padding: 10px;
     border: none;
@@ -53,15 +54,43 @@ button {
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s;
+    margin: 4px 0;
 }
-  
+
 button:hover {
     background: #0056b3;
 }
-  
+
+#playerControls {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 300px;
+}
+
+#playerControls button {
+    width: 100%;
+}
+
+.volume-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#volumeSlider {
+    flex-grow: 1;
+    accent-color: #007bff;
+}
+
 #status {
     margin-top: 15px;
     color: #333;
     font-size: 14px;
 }
-  
