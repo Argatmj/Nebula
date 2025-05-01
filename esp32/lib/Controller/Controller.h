@@ -16,7 +16,7 @@ class Controller {
     MQTT mqClient_;
     void setup_WiFi();
     AudioPC audioClient_;
-    bool isFloat(String str);
+    bool isNumber(String str);
     WebServerSocket webClient_;
     const char* ssid_ = "";
     const char* password_ = "";

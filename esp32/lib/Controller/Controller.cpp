@@ -91,7 +91,7 @@ void Controller::onEvent(uint8_t client_num, WStype_t type, uint8_t *payload, si
                 Serial.println("Added Audio.");
             }
 
-            if (instance->isFloat(message)){
+            if (instance->isNumber(message)){
                 float volume = message.toFloat();
                 instance->audioClient_.updateVolume(volume);
                 Serial.print("Volume: ");
@@ -143,18 +143,8 @@ void Controller::setup_WiFi(){
     Serial.println(WiFi.localIP());
 }
 
-bool Controller::isFloat(String str) {
-    bool decimalFound = false;
-    for (unsigned int i = 0; i < str.length(); i++) {
-        char c = str.charAt(i);
-        if (c == '.') {
-            if (decimalFound) return false;
-            decimalFound = true;
-        } else if (!isDigit(c)) {
-            return false;
-        }
-    }
-    return !(str == "." || str == "");
+bool Controller::isNumber(String str) {
+    return isDigit(str.charAt(0));
 }
 
   
