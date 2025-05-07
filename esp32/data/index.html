@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula's Control</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2>Add Audio</h2>
+    <form id="audioForm">
+        <label for="audioUrl">URL Audio:</label>
+        <input type="url" id="audioUrl" required placeholder="https://example.com/audio.mp3">
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="playerControls">
+        <button type="button" onclick="sendCommand('Next')">Next</button>
+        <button type="button" onclick="sendCommand('Switch')">Pause</button>
+        <button type="button" onclick="sendCommand('Previous')">Previous</button>
+        <div class="volume-group">
+            <label for="volumeSlider">Volume:</label>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" oninput="sendCommand(this.value)">
+        </div>
+        
+    </div>
+
+    <script>
+        let websocket;
+        const url = "";
+    
+        function onSubmit(event) {
+            const urlInput = document.getElementById("audioUrl");
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(urlInput.value);
+            } else {
+                console.log("WebSocket is not connected.");
+            }
+        }
+    
+        function sendCommand(command) {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                websocket.send(command);
+            }
+        }
+    
+        window.addEventListener("load", () => {
+            document.getElementById("audioForm").addEventListener("submit", onSubmit);
+            websocket = new WebSocket(url);
+        });
+    </script>
+    
+</body>
+</html>
