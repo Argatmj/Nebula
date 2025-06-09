@@ -5,7 +5,7 @@ import tensorflow as tf
 from collections import deque
 import paho.mqtt.publish as publish
 
-class Predictions:
+class Classification:
 
     def __init__(self, model, labels, threshold, index, n_frames):
         self.model = tf.keras.models.load_model(model)
@@ -88,11 +88,12 @@ class Predictions:
             case 4: 
                 publish.single("Volume", value)
             case _:
-                print(f"{index} does not match")
+                pass
+                # print(f"{index} does not match")
 
     def set_volume(self, image, hand_landmarks):
         percent = self.change_volume(image,hand_landmarks)
-        self.volumes.append(round(percent))
+        self.volumes.append(percent)
         std = np.std(self.volumes)
         if len(self.volumes) == 20 and std < 0.15:
             print(f"Volume saved : {self.volumes[-1]}")
@@ -112,7 +113,7 @@ class Predictions:
             # show percentage 
             for indx, percent in enumerate(pred[0]):
                 value = percent*100
-                #print(f"Class {indx + 1}: {value:.2f}%")
+                print(f"Class {indx + 1}: {value:.2f}%")
                 self.percentages.append(value)
             self.frames = []
 
@@ -121,9 +122,9 @@ class Predictions:
         if h >= self.threshold:
             index = self.percentages.index(h)
             self.text = f"{self.labels[index]}"
-            if index in range(0,4):
+            if index in range(0,len(self.labels)):
                 self.send_command(index)
-            if index == 4:
+            if index == 4 :
                 self.flag = True
         else:
             self.text = "Not Recognized"
