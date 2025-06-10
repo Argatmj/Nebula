@@ -16,7 +16,7 @@ class Classification:
         self.length = len(index) * 2
     
         self.frames = []
-        self.volumes = deque(maxlen=20)
+        self.volumes = deque(maxlen=30)
         self.percentages = []
         self.text = "Not Recognized"
         self.flag = False
@@ -95,7 +95,7 @@ class Classification:
         percent = self.change_volume(image,hand_landmarks)
         self.volumes.append(percent)
         std = np.std(self.volumes)
-        if len(self.volumes) == 20 and std < 0.15:
+        if len(self.volumes) == 30 and std < 0.13:
             print(f"Volume saved : {self.volumes[-1]}")
             self.flag = False
             self.volumes.clear()
@@ -113,7 +113,7 @@ class Classification:
             # show percentage 
             for indx, percent in enumerate(pred[0]):
                 value = percent*100
-                print(f"Class {indx + 1}: {value:.2f}%")
+                # print(f"Class {indx + 1}: {value:.2f}%")
                 self.percentages.append(value)
             self.frames = []
 
