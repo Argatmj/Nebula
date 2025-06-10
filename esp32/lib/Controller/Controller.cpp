@@ -8,7 +8,7 @@ Controller::Controller()
 Controller* Controller::instance = nullptr;
 
 void Controller::setup()
-{
+{   
     setup_WiFi();
     mqClient_.setup();
     mqClient_.setCallBack(callback);
@@ -126,6 +126,9 @@ void Controller::onEvent(uint8_t client_num, WStype_t type, uint8_t *payload, si
 void Controller::setup_WiFi(){
     Serial.begin(115200);
     Serial.println();
+    Serial.println("ENv:");
+    Serial.println(WIFI_SSID);
+    Serial.println(WIFI_PASSWORD);    
     Serial.print("Connecting to ");
     Serial.print(ssid_);
 

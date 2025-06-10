@@ -17,6 +17,6 @@ class MQTT {
     void reconnect();
     WiFiClient espClient_;
     PubSubClient mqClient_;
-    const char* mqtt_server_ = "";
+    const char* mqtt_server_ = MQTT_IP;
     void subscribeToTopics(PubSubClient& client, std::vector<String> topics = {"Position","State","Volume","Urls"});
 };

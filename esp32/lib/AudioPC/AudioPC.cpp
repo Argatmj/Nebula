@@ -31,9 +31,10 @@ void AudioPC::setup(){
     cfg.pin_ws = 14;
     cfg.pin_bck = 27;
     cfg.pin_data = 26;
+    cfg.buffer_size = 1024;
 
     i2s_.begin(cfg);
-
+    
     player_.begin();
     player_.setVolume(0.3);
 }

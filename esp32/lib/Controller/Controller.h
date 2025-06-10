@@ -18,6 +18,6 @@ class Controller {
     AudioPC audioClient_;
     bool isNumber(String str);
     WebServerSocket webClient_;
-    const char* ssid_ = "";
-    const char* password_ = "";
+    const char* ssid_ = WIFI_SSID;
+    const char* password_ = WIFI_PASSWORD;
 };
