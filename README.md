@@ -24,7 +24,7 @@ The project is split into two main folders:
 - `style.css`: Stylesheet for the web interface.
 
 #### `lib/`
-The audio player logic is modularized into four main classes:
+The audio player logic is split into four main classes:
 
 - `AudioPC.h`: Handles audio control functions.
 - `MQTT.h`: Manages MQTT communication between the ESP32 and the broker.
