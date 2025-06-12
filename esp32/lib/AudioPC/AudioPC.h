@@ -22,9 +22,9 @@ class AudioPC {
         "http://ice1.somafm.com/groovesalad-128-mp3"
       };
       
-    const char *wifi = "";
-    const char *password = "";
-
+    const char *wifi = WIFI_SSID;
+    const char *password = WIFI_PASSWORD;
+    
     URLStream urlStream_;
     AudioSourceDynamicURL source_;
     I2SStream i2s_;
