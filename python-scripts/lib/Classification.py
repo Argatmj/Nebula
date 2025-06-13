@@ -73,7 +73,8 @@ class Classification:
         value = max(0.0, min(values,1.0))
         value = value * 1
         value = round(value, 1)
-        print(f"Volume : {value}")
+        self.text = (f"Volume : {value}")
+        self.put_text(img)
         self.send_command(4,value)
         return value
     
@@ -95,8 +96,8 @@ class Classification:
         percent = self.change_volume(image,hand_landmarks)
         self.volumes.append(percent)
         std = np.std(self.volumes)
-        if len(self.volumes) == 30 and std < 0.13:
-            print(f"Volume saved : {self.volumes[-1]}")
+        if len(self.volumes) == 30 and std < 0.080:
+            self.text = (f"Volume: {self.volumes[-1]}")
             self.flag = False
             self.volumes.clear()
 

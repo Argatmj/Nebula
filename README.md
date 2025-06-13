@@ -1,8 +1,8 @@
-# Nebula: Movement-Controlled Audio Player
+# Nebula: Movement Controlled Audio Player
 
 ## Overview
 
-Nebula is an audio player that can be controlled using hand movements. It supports basic functions such as next, previous, play/pause, and volume control.
+Nebula is an audio player that can be controlled with hand movements using machine learning. It supports basic functions such as next, previous, play/pause, and volume control.
 
 The project is split into two main folders:
 
@@ -57,6 +57,8 @@ The workflow includes the following steps:
 - PlatformIO
 - MediaPipe
 - OpenCV
+- TenserFlow
+- Paho-MQTT
 
 ### Hardware
 - ESP32 
@@ -94,10 +96,14 @@ pio run --target upload
 ```cmd
 net start mosquitto
 ```
-
-5. Run the movement classifier
+5. Download dependencies 
 ```bash
 cd python-scripts
+pip install -r requirements.txt
+```
+
+6. Run the movement classifier
+```bash
 python classify.py
 ```
 
@@ -119,5 +125,8 @@ python collect.py
 
 
 ## Demo
-Demo video will be added soon.
+Check out the demo:
+
+[![Nebula Demo](https://img.youtube.com/vi/43perHRZqPU/maxresdefault.jpg)](https://youtu.be/43perHRZqPU)
+
 

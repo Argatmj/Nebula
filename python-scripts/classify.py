@@ -8,14 +8,14 @@ LABEL = {
   0 : "left_swipe",
   1 : "right_swipe",
   2 : "still",
-  3 : "start",
+  3 : "toggle",
   4 : "volume"
 }
 INDEX = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 #INDEX = [0,4,8,12,16,20]
 
 def main():
-  # mp_drawing = mp.solutions.drawing_utils
+  mp_drawing = mp.solutions.drawing_utils
   # mp_drawing_styles = mp.solutions.drawing_styles
   mp_hands = mp.solutions.hands
 
@@ -42,10 +42,11 @@ def main():
       # draw landmark
       if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
-          # mp_drawing.draw_landmarks(image,hand_landmarks)
+          mp_drawing.draw_landmarks(image,hand_landmarks)
           # change volume 
           if predict.flag: 
             predict.set_volume(image,hand_landmarks)
+
     
       # collect all frames
       if len(predict.frames) < N_FRAMES and results.multi_hand_landmarks:

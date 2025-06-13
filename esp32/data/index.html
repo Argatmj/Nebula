@@ -16,7 +16,7 @@
 
     <div id="playerControls">
         <button type="button" onclick="sendCommand('Next')">Next</button>
-        <button type="button" onclick="sendCommand('Switch')">Pause</button>
+        <button type="button" onclick="sendCommand('Switch')">Toggle</button>
         <button type="button" onclick="sendCommand('Previous')">Previous</button>
         <div class="volume-group">
             <label for="volumeSlider">Volume:</label>
@@ -27,7 +27,7 @@
 
     <script>
         let websocket;
-        const socketIP = window.location.hostname;
+        const socketIP = "";
         const url = 'ws://' + socketIP + ':1337';
     
         function onSubmit(event) {

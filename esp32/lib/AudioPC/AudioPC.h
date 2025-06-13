@@ -15,11 +15,12 @@ class AudioPC {
     void setup();
 
     private:
-    const char *urls[4] = {
-        "https://strm112.1.fm/bossanova_mobile_mp3?aw_0_req.gdpr=true",
-        "https://npr-ice.streamguys1.com/live.mp3",
-        "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service",
-        "http://ice1.somafm.com/groovesalad-128-mp3"
+    const char *urls[5] = {
+        "http://192.168.50.213:8000/blue.mp3",
+        "http://192.168.50.213:8000/Bone.mp3",
+        "http://192.168.50.213:8000/Fana.mp3",
+        "http://192.168.50.213:8000/moon3.mp3",
+        "http://192.168.50.213:8000/rush.mp3"
       };
       
     const char *wifi = WIFI_SSID;
