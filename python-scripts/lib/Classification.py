@@ -5,10 +5,12 @@ import tensorflow as tf
 from collections import deque
 import paho.mqtt.publish as publish
 
+# class for classifying hand movements and sending commands
 class Classification:
 
+    # store settings 
     def __init__(self, model, labels, threshold, index, n_frames):
-        self.model = tf.keras.models.load_model(model)
+        self.model = tf.keras.models.load_model(model) # load pretrained model 
         self.labels = labels
         self.threshold = threshold
         self.index = index
@@ -21,6 +23,7 @@ class Classification:
         self.text = "Not Recognized"
         self.flag = False
 
+    # normalize movement data 
     def normalize(self, sequence):
         # find center
         arr = np.array(sequence)
@@ -32,6 +35,7 @@ class Classification:
         normalized = (arr - center) / scale 
         return normalized.reshape(self.n_frames,self.length)
 
+    # extract landmarks coordinates
     def collect_coordinates(self,multi_hand_landmarks):
         data = []
         for hand_landmarks in multi_hand_landmarks:
@@ -40,12 +44,14 @@ class Classification:
                     coords = [landmark.x,landmark.y]
                     data.extend(coords)
         return data 
-    
+
+    # calculate the euclidean distance between the thumb and index finger
     @staticmethod
     def calculate_distance(thumb, index):
         x, y = index[0] - thumb[0], index[1] - thumb[1]
         return math.hypot(x,y)
 
+    # draw a line between the thumb and index finger
     @staticmethod
     def draw_line(img, hand_landmarks):
         height, width, _ = img.shape
@@ -57,6 +63,7 @@ class Classification:
         cv2.line(img, thumb_coords, index_coords, colour, thick)
         return thumb_coords, index_coords, width, height
 
+    # calculate the size of the hand 
     @staticmethod
     def get_hand_size(hand_landmark, w, h):
         hand = hand_landmark.landmark
@@ -64,6 +71,7 @@ class Classification:
         x, y = top.x*w - bottom.x*w, top.y*h - bottom.y*h
         return math.hypot(x,y)
     
+    # calculate volume based on euclidean distance 
     def change_volume(self, img, hand_landmarks):
         thumb, index, w, h = self.draw_line(img, hand_landmarks)
         size = self.get_hand_size(hand_landmarks,w,h)
@@ -78,6 +86,7 @@ class Classification:
         self.send_command(4,value)
         return value
     
+    # send command through MQTT based on index
     def send_command(self, index, value=0):
         match index:
             case 0:
@@ -92,6 +101,7 @@ class Classification:
                 pass
                 # print(f"{index} does not match")
 
+    # set the volume if its stable 
     def set_volume(self, image, hand_landmarks):
         percent = self.change_volume(image,hand_landmarks)
         self.volumes.append(percent)
@@ -101,6 +111,7 @@ class Classification:
             self.flag = False
             self.volumes.clear()
 
+    # classify the movement 
     def classify_movement(self):
         if not all(map(lambda x: len(x) == self.length, self.frames)) : 
             fixed_movement = []
@@ -118,6 +129,7 @@ class Classification:
                 self.percentages.append(value)
             self.frames = []
 
+    # display the command based on highest percentage 
     def show_command(self):
         h = max(self.percentages)
         if h >= self.threshold:
@@ -131,6 +143,7 @@ class Classification:
             self.text = "Not Recognized"
         self.percentages.clear()
 
+    # draw text
     def put_text(self, image, coords=(50,50)):
         cv2.putText(
             image,

@@ -53,11 +53,11 @@ def main():
         if results.multi_hand_landmarks:
           collect.collect_frames(results.multi_hand_landmarks)
     
-      # add data to collections 
+      # add movement to collections 
       if collect.recording and collect.length_of_frames() == N_FRAMES:
         collect.add_movement()
 
-      # remove last data from collections
+      # remove last movement from collections
       if key.is_pressed('d') and not collect.delete:
         collect.remove_last_movement()
       if key.is_pressed('d') and collect.delete:

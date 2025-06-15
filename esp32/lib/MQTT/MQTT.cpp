@@ -5,11 +5,13 @@ mqClient_(espClient_)
 {
 }
 
+// connect to the mqtt server at port 1883
 void MQTT::setup()
 {
-    mqClient_.setServer(mqtt_server_, 1883); 
+    mqClient_.setServer(mqtt_server_, 1883);
 }
 
+// maintains MQTT connection 
 void MQTT::loop()
 {
     if (!mqClient_.connected()) {
@@ -19,11 +21,13 @@ void MQTT::loop()
     mqClient_.loop();
 }
 
+// sets the callback function 
 void MQTT::setCallBack(MQTT_CALLBACK_SIGNATURE)
 {
   mqClient_.setCallback(callback);
 }
 
+// reconnect when disconnected 
 void MQTT::reconnect()
 {
     while (!mqClient_.connected()) {
@@ -41,6 +45,7 @@ void MQTT::reconnect()
   }
 }
 
+// subscribe to selected topics 
 void MQTT::subscribeToTopics(PubSubClient &client, std::vector<String> topics)
 {
     for (auto& topic : topics){

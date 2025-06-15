@@ -1,5 +1,6 @@
 import json
 
+# class for collecting and saving movement data 
 class Collections: 
     def __init__(self, file_path, data):
         self.file_path = file_path
@@ -14,6 +15,7 @@ class Collections:
             "frames": self.frames
         }
 
+    # start a new record of movements 
     def start(self):
         print("Recording started...")
         self.recording = True
@@ -23,6 +25,7 @@ class Collections:
         "frames": self.frames
         }
 
+    # extract landmarks coordinates 
     def collect_coordinates(self, multi_hand_landmarks):
         new_data = []
         for hand_landmarks in multi_hand_landmarks:
@@ -31,9 +34,11 @@ class Collections:
                 new_data.extend(coords)
         return new_data
     
+    # calculate the length of frames
     def length_of_frames(self):
         return len(self.movement["frames"])
     
+    # prints the count of each label from the file 
     def print_label_count(self,data):
         label_dict = {}
         for movements in data:
@@ -48,19 +53,23 @@ class Collections:
         else:
             print("data is empty")
 
+    # read the JSON file 
     def read_file(self):
         with open(self.file_path,"r") as f:
             data = json.load(f)
         return data
     
+    # write to the JSON file 
     def write_file(self,data):
         with open(self.file_path,"w") as f:
             json.dump(data,f)
 
+    # set the label corresponding to the number 
     def set_label(self,id):
       self.label = id
       print(f"Label is set to {self.label}!")
 
+    # collect all 15 frames for movement 
     def collect_frames(self, multi_hand_landmarks):
         coords = self.collect_coordinates(multi_hand_landmarks)
         if len(coords) == 42:
@@ -69,6 +78,7 @@ class Collections:
         else:
           print(f"Record again. data was corrupted!")
     
+    # save movement to the JSON file 
     def add_movement(self):
         self.movement["label"] = self.label
         self.data.append(self.movement)
@@ -77,6 +87,7 @@ class Collections:
         self.recording = False
         self.print_label_count(self.read_file())
 
+    # remove the last movement from the file
     def remove_last_movement(self):
         self.delete = True
         self.data = self.data[:-1]

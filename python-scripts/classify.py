@@ -59,7 +59,7 @@ def main():
       if len(predict.frames) == N_FRAMES and not predict.flag:
         predict.classify_movement()
     
-      # show label / send command 
+      # show label and send command 
       if predict.percentages:
         predict.show_command()
       predict.put_text(image)

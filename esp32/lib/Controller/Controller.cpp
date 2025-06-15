@@ -7,16 +7,18 @@ Controller::Controller()
 
 Controller* Controller::instance = nullptr;
 
+// sets up Wi-Fi, audio player, MQTT and WebServerSocket 
 void Controller::setup()
 {   
     setup_WiFi();
     mqClient_.setup();
-    mqClient_.setCallBack(callback);
+    mqClient_.setCallBack(callback); // set callback for MQTT class
     webClient_.setup();
-    webClient_.setOnEvent(onEvent);
+    webClient_.setOnEvent(onEvent); // set onEvent for WebServerSocket class 
     audioClient_.setup();
 }
 
+// loops MQTT, AudioPC, and WebServerSocket 
 void Controller::loop()
 {
     mqClient_.loop();
@@ -24,6 +26,7 @@ void Controller::loop()
     webClient_.loop();
 }
 
+// callback function for MQTT 
 void Controller::callback(char *topic, byte *payload, unsigned int length)
 {
     std::vector<String> commands = {"Previous", "Next", "Switch"};
@@ -64,6 +67,7 @@ void Controller::callback(char *topic, byte *payload, unsigned int length)
     Serial.println("");
 }
 
+// callbackk function for WebServerSocket
 void Controller::onEvent(uint8_t client_num, WStype_t type, uint8_t *payload, size_t length)
 {
     switch (type) {
@@ -123,12 +127,10 @@ void Controller::onEvent(uint8_t client_num, WStype_t type, uint8_t *payload, si
       }
 }
 
+// connects to Wi-Fi
 void Controller::setup_WiFi(){
     Serial.begin(115200);
     Serial.println();
-    Serial.println("ENv:");
-    Serial.println(WIFI_SSID);
-    Serial.println(WIFI_PASSWORD);    
     Serial.print("Connecting to ");
     Serial.print(ssid_);
 
@@ -146,6 +148,7 @@ void Controller::setup_WiFi(){
     Serial.println(WiFi.localIP());
 }
 
+// checks if the first char is a number 
 bool Controller::isNumber(String str) {
     return isDigit(str.charAt(0));
 }
